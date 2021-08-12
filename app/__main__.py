@@ -1,30 +1,22 @@
 import uvicorn
 from fastapi import FastAPI
-from sqlalchemy.ext.asyncio import create_async_engine
 
-from app.db.models import Base
 from app.endpoints import include_routers
-
-app = FastAPI()
-include_routers(app)
+from app.events_handling import create_startup_handler, create_shutdown_handler
 
 
-@app.on_event("startup")
-async def startup():
-    engine = create_async_engine(
-        "postgresql+asyncpg://localhost/fastapi"
-    )
-    app.state.alchemy_engine = engine
+def get_app() -> FastAPI:
+    app = FastAPI()
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+    app.add_event_handler("startup", create_startup_handler(app))
+    app.add_event_handler("shutdown", create_shutdown_handler(app))
 
+    include_routers(app)
 
-@app.on_event("shutdown")
-async def shutdown():
-    await app.state.alchemy_engine.dispose()
+    return app
 
 
-if __name__ == '__main__':
+app = get_app()
+
+if __name__ == "__main__":
     uvicorn.run("app.__main__:app", reload=True)
