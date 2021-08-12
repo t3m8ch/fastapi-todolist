@@ -1,19 +1,13 @@
 from typing import Callable
 
 from fastapi import FastAPI
-from sqlalchemy.ext.asyncio import create_async_engine
 
-from app.db.models import Base
+from app.db.init_db import init_db
 
 
 def create_startup_handler(app: FastAPI, db_url: str) -> Callable:
     async def startup() -> None:
-        engine = create_async_engine(db_url)
-        app.state.alchemy_engine = engine
-
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
-            await conn.run_sync(Base.metadata.create_all)
+        app.state.alchemy_engine = await init_db(db_url)
 
     return startup
 
