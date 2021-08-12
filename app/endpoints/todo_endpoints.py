@@ -17,8 +17,11 @@ async def create_todo(
 
 
 @todo_router.get("/todos", response_model=list[OutTodo])
-async def get_all_todos():
-    pass
+async def get_all_todos(
+        todo_repository: TodoRepository = Depends(
+            get_repository(TodoRepository))
+):
+    return await todo_repository.get_all()
 
 
 @todo_router.get("/todos/{todo_id}", response_model=OutTodo)

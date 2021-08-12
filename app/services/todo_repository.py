@@ -15,6 +15,10 @@ class TodoRepository(BaseRepository):
 
         return _map_todo_to_pydantic(todo)
 
+    async def get_all(self) -> list[OutTodo]:
+        todos = (await self._session.execute(select(Todo))).scalars().all()
+        return list(map(_map_todo_to_pydantic, todos))
+
 
 def _map_todo_to_pydantic(table: Todo) -> OutTodo:
     return OutTodo(
