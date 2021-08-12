@@ -33,8 +33,8 @@ def client(engine: AsyncEngine) -> TestClient:
 
 
 @pytest.fixture(scope="function", autouse=True)
-def init_db_fixture(engine: AsyncEngine):
-    asyncio.get_event_loop().run_until_complete(init_db(engine))
+async def init_db_fixture(engine: AsyncEngine):
+    await init_db(engine)
 
 
 def test_create_todo(client: TestClient):
