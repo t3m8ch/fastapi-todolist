@@ -37,8 +37,16 @@ async def get_todo_by_id(
 
 
 @todo_router.put("/todos/{todo_id}", response_model=OutTodo)
-async def update_todo(todo_id: int, todo: UpdatingTodo):
-    pass
+async def update_todo(
+        todo_id: int,
+        todo: UpdatingTodo,
+        todo_repository: TodoRepository = Depends(
+            get_repository(TodoRepository))
+):
+    try:
+        return await todo_repository.update(todo_id, todo)
+    except TodoNotFoundError:
+        raise HTTPException(404, "Todo not found")
 
 
 @todo_router.delete("/todos/{todo_id}", response_model=OutTodo)
