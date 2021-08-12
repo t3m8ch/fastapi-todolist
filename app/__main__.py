@@ -1,12 +1,10 @@
 import uvicorn
 from fastapi import FastAPI
 
+from app.endpoints import include_routers
+
 app = FastAPI()
-
-
-@app.get("/")
-async def index():
-    return {"message": "Hello!"}
+include_routers(app)
 
 
 if __name__ == '__main__':
