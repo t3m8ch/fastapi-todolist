@@ -2,12 +2,14 @@ from typing import Callable
 
 from fastapi import FastAPI
 
-from app.db.init_db import init_db
+from app.db.init_db import init_db, create_engine
 
 
 def create_startup_handler(app: FastAPI, db_url: str) -> Callable:
     async def startup() -> None:
-        app.state.alchemy_engine = await init_db(db_url)
+        engine = create_engine(db_url)
+        await init_db(engine)
+        app.state.alchemy_engine = engine
 
     return startup
 
