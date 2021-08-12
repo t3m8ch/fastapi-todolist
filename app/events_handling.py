@@ -6,11 +6,9 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from app.db.models import Base
 
 
-def create_startup_handler(app: FastAPI) -> Callable:
+def create_startup_handler(app: FastAPI, db_url: str) -> Callable:
     async def startup() -> None:
-        engine = create_async_engine(
-            "postgresql+asyncpg://localhost/fastapi"
-        )
+        engine = create_async_engine(db_url)
         app.state.alchemy_engine = engine
 
         async with engine.begin() as conn:
