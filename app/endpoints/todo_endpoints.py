@@ -1,13 +1,19 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.dependencies import get_repository
 from app.schemas import OutTodo, CreatingTodo, UpdatingTodo
+from app.services.todo_repository import TodoRepository
 
 todo_router = APIRouter()
 
 
 @todo_router.post("/todos", response_model=OutTodo)
-async def create_todo(todo: CreatingTodo):
-    pass
+async def create_todo(
+        todo: CreatingTodo,
+        todo_repository: TodoRepository = Depends(
+            get_repository(TodoRepository))
+):
+    return await todo_repository.create(todo)
 
 
 @todo_router.get("/todos", response_model=list[OutTodo])
