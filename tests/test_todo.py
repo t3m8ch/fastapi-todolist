@@ -1,23 +1,43 @@
 import asyncio
 
+import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.__main__ import get_app
 from app.config import AppConfig
 from app.db.init_db import init_db, create_engine
 
-config = AppConfig()
-app = get_app()
 
-engine = create_engine(config.test_db_url)
-app.state.alchemy_engine = engine
+@pytest.fixture(scope="module")
+def event_loop():
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
 
-client = TestClient(app)
+
+@pytest.fixture(scope="module")
+async def engine() -> AsyncEngine:
+    config = AppConfig()
+
+    engine = create_engine(config.test_db_url)
+    yield engine
+    await engine.dispose()
 
 
-def test_create_todo():
+@pytest.fixture(scope="module")
+def client(engine: AsyncEngine) -> TestClient:
+    app = get_app()
+    app.state.alchemy_engine = engine
+    return TestClient(app)
+
+
+@pytest.fixture(scope="function", autouse=True)
+def init_db_fixture(engine: AsyncEngine):
     asyncio.get_event_loop().run_until_complete(init_db(engine))
 
+
+def test_create_todo(client: TestClient):
     response1 = client.post("/todos", json={"text": "first"})
     response2 = client.post("/todos", json={"text": "second"})
     response3 = client.post("/todos", json={"text": "third"})
