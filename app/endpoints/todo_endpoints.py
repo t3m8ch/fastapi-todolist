@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.dependencies import get_repository
 from app.schemas import OutTodo, CreatingTodo, UpdatingTodo
-from app.services.todo_repository import TodoRepository
+from app.services.todo_repository import TodoRepository, TodoNotFoundError
 
 todo_router = APIRouter()
 
@@ -25,8 +25,15 @@ async def get_all_todos(
 
 
 @todo_router.get("/todos/{todo_id}", response_model=OutTodo)
-async def get_todo_by_id(todo_id: int):
-    pass
+async def get_todo_by_id(
+        todo_id: int,
+        todo_repository: TodoRepository = Depends(
+            get_repository(TodoRepository))
+):
+    try:
+        return await todo_repository.get_one_by_id(todo_id)
+    except TodoNotFoundError:
+        raise HTTPException(404, "Todo not found")
 
 
 @todo_router.put("/todos/{todo_id}", response_model=OutTodo)
