@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, select, update, delete
 from sqlalchemy.exc import NoResultFound
 
 from app.db.models import Todo
@@ -36,13 +36,19 @@ class TodoRepository(BaseRepository):
         await self._session.commit()
         return _map_todo_to_pydantic(todo)
 
+    async def delete(self, todo_id: int) -> OutTodo:
+        todo = await self._execute_delete_query(todo_id)
+        await self._session.commit()
+        return _map_todo_to_pydantic(todo)
+
+    # Uncle Bob says that exception handling should be moved
+    # to a separate method
+
     async def _execute_update_query(
             self,
             todo_id: int,
             todo: UpdatingTodo
     ) -> Todo:
-        # Uncle Bob says that exception handling should be moved
-        # to a separate method
         try:
             return (await self._session.execute(
                 update(Todo).where(Todo.id == todo_id).
@@ -51,6 +57,16 @@ class TodoRepository(BaseRepository):
             )).one()
         except NoResultFound:
             raise TodoNotFoundError(todo_id)
+
+    async def _execute_delete_query(self, todo_id: int) -> Todo:
+        try:
+            return (await self._session.execute(
+                delete(Todo).where(Todo.id == todo_id).
+                returning(Todo)
+            )).one()
+        except NoResultFound:
+            raise TodoNotFoundError(todo_id)
+
 
 def _map_todo_to_pydantic(table: Todo) -> OutTodo:
     return OutTodo(

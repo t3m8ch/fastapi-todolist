@@ -50,5 +50,12 @@ async def update_todo(
 
 
 @todo_router.delete("/todos/{todo_id}", response_model=OutTodo)
-async def delete_todo(todo_id: int):
-    pass
+async def delete_todo(
+        todo_id: int,
+        todo_repository: TodoRepository = Depends(
+            get_repository(TodoRepository))
+):
+    try:
+        return await todo_repository.delete(todo_id)
+    except TodoNotFoundError:
+        raise HTTPException(404, "Todo not found")
