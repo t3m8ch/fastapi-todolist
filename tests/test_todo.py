@@ -60,3 +60,29 @@ def test_create_todo(client: TestClient):
         "text": "third",
         "is_completed": False
     }
+
+
+def test_get_all_todos(client: TestClient):
+    client.post("/todos", json={"text": "first"})
+    client.post("/todos", json={"text": "second"})
+    client.post("/todos", json={"text": "third"})
+
+    all_todos = client.get("/todos").json()
+
+    assert all_todos == [
+        {
+            "id": 1,
+            "text": "first",
+            "is_completed": False
+        },
+        {
+            "id": 2,
+            "text": "second",
+            "is_completed": False
+        },
+        {
+            "id": 3,
+            "text": "third",
+            "is_completed": False
+        },
+    ]
