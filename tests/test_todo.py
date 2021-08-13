@@ -165,3 +165,30 @@ def test_update_todo_if_todo_not_found(client: TestClient):
     assert expected.json() == {
         "detail": "Todo not found"
     }
+
+
+def test_delete_todo(client: TestClient):
+    client.post("/todos", json={"text": "first"})
+    client.post("/todos", json={"text": "second"})
+
+    client.delete("todos/1")
+
+    actual = client.get("/todos").json()
+
+    assert len(actual) == 1
+    assert actual == [
+        {
+            "id": 2,
+            "text": "second",
+            "is_completed": False
+        }
+    ]
+
+
+def test_delete_todo_if_todo_not_found(client: TestClient):
+    actual = client.delete("/todos/50")
+
+    assert actual.status_code == 404
+    assert actual.json() == {
+        "detail": "Todo not found"
+    }
