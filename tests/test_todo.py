@@ -91,3 +91,30 @@ def test_get_all_todos(client: TestClient):
 def test_get_all_todos_if_there_not_todos(client: TestClient):
     all_todos = client.get("/todos").json()
     assert all_todos == []
+
+
+def test_get_todo_by_id(client: TestClient):
+    client.post("/todos", json={"text": "first"})
+    client.post("/todos", json={"text": "second"})
+
+    assert client.get("/todos/1").json() == {
+        "id": 1,
+        "text": "first",
+        "is_completed": False
+    }
+    assert client.get("/todos/2").json() == {
+        "id": 2,
+        "text": "second",
+        "is_completed": False
+    }
+
+
+def test_get_todo_by_id_if_todo_not_found(client: TestClient):
+    client.post("/todos", json={"text": "first"})
+    client.post("/todos", json={"text": "second"})
+
+    response = client.get("/todos/50")
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Todo not found"
+    }
