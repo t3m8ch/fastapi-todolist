@@ -118,3 +118,50 @@ def test_get_todo_by_id_if_todo_not_found(client: TestClient):
     assert response.json() == {
         "detail": "Todo not found"
     }
+
+
+def test_update_todo(client: TestClient):
+    client.post("/todos", json={"text": "first"})
+    client.post("/todos", json={"text": "second"})
+    client.post("/todos", json={"text": "third"})
+    client.post("/todos", json={"text": "fourth"})
+
+    update1 = client.put("/todos/1", json={"is_completed": True})
+    update2 = client.put("/todos/2", json={"text": "something"})
+    update3 = client.put("/todos/3", json={
+        "text": "something",
+        "is_completed": True
+    })
+
+    assert all(u.status_code == 200 for u in (update1, update2, update3))
+
+    assert sorted(client.get("/todos").json(), key=lambda i: i["id"]) == [
+        {
+            "id": 1,
+            "text": "first",
+            "is_completed": True
+        },
+        {
+            "id": 2,
+            "text": "something",
+            "is_completed": False
+        },
+        {
+            "id": 3,
+            "text": "something",
+            "is_completed": True
+        },
+        {
+            "id": 4,
+            "text": "fourth",
+            "is_completed": False
+        }
+    ]
+
+
+def test_update_todo_if_todo_not_found(client: TestClient):
+    expected = client.put("/todos/50", json={"is_completed": True})
+    assert expected.status_code == 404
+    assert expected.json() == {
+        "detail": "Todo not found"
+    }
