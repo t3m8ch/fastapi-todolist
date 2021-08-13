@@ -86,3 +86,8 @@ def test_get_all_todos(client: TestClient):
             "is_completed": False
         },
     ]
+
+
+def test_get_all_todos_if_there_not_todos(client: TestClient):
+    all_todos = client.get("/todos").json()
+    assert all_todos == []
