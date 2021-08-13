@@ -38,24 +38,25 @@ async def init_db_fixture(engine: AsyncEngine):
 
 
 def test_create_todo(client: TestClient):
-    response1 = client.post("/todos", json={"text": "first"})
-    response2 = client.post("/todos", json={"text": "second"})
-    response3 = client.post("/todos", json={"text": "third"})
+    actual_responses = [
+        client.post("/todos", json={"text": "first"}),
+        client.post("/todos", json={"text": "second"}),
+        client.post("/todos", json={"text": "third"})
+    ]
 
-    assert all(res.status_code == 200
-               for res in (response1, response2, response3))
+    assert all(r.status_code == 200 for r in actual_responses)
 
-    assert response1.json() == {
+    assert actual_responses[0].json() == {
         "id": 1,
         "text": "first",
         "is_completed": False
     }
-    assert response2.json() == {
+    assert actual_responses[1].json() == {
         "id": 2,
         "text": "second",
         "is_completed": False
     }
-    assert response3.json() == {
+    assert actual_responses[2].json() == {
         "id": 3,
         "text": "third",
         "is_completed": False
@@ -67,9 +68,10 @@ def test_get_all_todos(client: TestClient):
     client.post("/todos", json={"text": "second"})
     client.post("/todos", json={"text": "third"})
 
-    all_todos = client.get("/todos").json()
+    actual_response = client.get("/todos")
 
-    assert all_todos == [
+    assert actual_response.status_code == 200
+    assert actual_response.json() == [
         {
             "id": 1,
             "text": "first",
@@ -89,20 +91,26 @@ def test_get_all_todos(client: TestClient):
 
 
 def test_get_all_todos_if_there_not_todos(client: TestClient):
-    all_todos = client.get("/todos").json()
-    assert all_todos == []
+    actual_response = client.get("/todos")
+
+    assert actual_response.status_code == 200
+    assert actual_response.json() == []
 
 
 def test_get_todo_by_id(client: TestClient):
     client.post("/todos", json={"text": "first"})
     client.post("/todos", json={"text": "second"})
 
-    assert client.get("/todos/1").json() == {
+    actual_responses = [client.get("/todos/1"), client.get("/todos/2")]
+
+    assert all(r.status_code == 200 for r in actual_responses)
+
+    assert actual_responses[0].json() == {
         "id": 1,
         "text": "first",
         "is_completed": False
     }
-    assert client.get("/todos/2").json() == {
+    assert actual_responses[1].json() == {
         "id": 2,
         "text": "second",
         "is_completed": False
@@ -113,9 +121,9 @@ def test_get_todo_by_id_if_todo_not_found(client: TestClient):
     client.post("/todos", json={"text": "first"})
     client.post("/todos", json={"text": "second"})
 
-    response = client.get("/todos/50")
-    assert response.status_code == 404
-    assert response.json() == {
+    actual_response = client.get("/todos/50")
+    assert actual_response.status_code == 404
+    assert actual_response.json() == {
         "detail": "Todo not found"
     }
 
@@ -126,16 +134,7 @@ def test_update_todo(client: TestClient):
     client.post("/todos", json={"text": "third"})
     client.post("/todos", json={"text": "fourth"})
 
-    update1 = client.put("/todos/1", json={"is_completed": True})
-    update2 = client.put("/todos/2", json={"text": "something"})
-    update3 = client.put("/todos/3", json={
-        "text": "something",
-        "is_completed": True
-    })
-
-    assert all(u.status_code == 200 for u in (update1, update2, update3))
-
-    assert sorted(client.get("/todos").json(), key=lambda i: i["id"]) == [
+    expected_todos = [
         {
             "id": 1,
             "text": "first",
@@ -158,11 +157,25 @@ def test_update_todo(client: TestClient):
         }
     ]
 
+    actual_responses = [
+        client.put("/todos/1", json={"is_completed": True}),
+        client.put("/todos/2", json={"text": "something"}),
+        client.put("/todos/3", json={
+            "text": "something",
+            "is_completed": True
+        })
+    ]
+    actual_todos = sorted(client.get("/todos").json(), key=lambda i: i["id"])
+
+    assert all(r.status_code == 200 for r in actual_responses)
+    assert actual_todos == expected_todos
+    assert all(expected_todos[i] == actual_todos[i] for i in range(4))
+
 
 def test_update_todo_if_todo_not_found(client: TestClient):
-    expected = client.put("/todos/50", json={"is_completed": True})
-    assert expected.status_code == 404
-    assert expected.json() == {
+    actual_response = client.put("/todos/50", json={"is_completed": True})
+    assert actual_response.status_code == 404
+    assert actual_response.json() == {
         "detail": "Todo not found"
     }
 
@@ -173,10 +186,12 @@ def test_delete_todo(client: TestClient):
 
     client.delete("todos/1")
 
-    actual = client.get("/todos").json()
+    actual_response = client.get("/todos")
+    json = actual_response.json()
 
-    assert len(actual) == 1
-    assert actual == [
+    assert actual_response.status_code == 200
+    assert len(json) == 1
+    assert json == [
         {
             "id": 2,
             "text": "second",
@@ -186,9 +201,9 @@ def test_delete_todo(client: TestClient):
 
 
 def test_delete_todo_if_todo_not_found(client: TestClient):
-    actual = client.delete("/todos/50")
+    actual_response = client.delete("/todos/50")
 
-    assert actual.status_code == 404
-    assert actual.json() == {
+    assert actual_response.status_code == 404
+    assert actual_response.json() == {
         "detail": "Todo not found"
     }
