@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.dependencies import get_todo_repository
-from app.protocols.todo_repository_protocol import TodoRepositoryProtocol
+from app.protocols.todo_repository_protocol import TodoRepositoryProtocol, \
+    TodoNotFoundError
 from app.schemas import OutTodo, CreatingTodo, UpdatingTodo
-from app.services.todo_repository import TodoNotFoundError
 
 todo_router = APIRouter()
 

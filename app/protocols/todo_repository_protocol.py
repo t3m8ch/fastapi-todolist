@@ -3,6 +3,11 @@ from typing import Protocol
 from app.schemas import CreatingTodo, OutTodo, UpdatingTodo
 
 
+class TodoNotFoundError(Exception):
+    def __init__(self, todo_id: int):
+        self.todo_id = todo_id
+
+
 class TodoRepositoryProtocol(Protocol):
     async def create(self, todo: CreatingTodo) -> OutTodo:
         pass
