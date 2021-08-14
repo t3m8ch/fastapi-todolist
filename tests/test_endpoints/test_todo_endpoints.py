@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.__main__ import get_app
+from app.main import get_app
 from app.dependencies import get_todo_repository
 from app.protocols.todo_repository_protocol import TodoRepositoryProtocol
 from tests.mocks.mock_todo_repository import MockTodoRepository
