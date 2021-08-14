@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.dependencies import get_repository
+from app.protocols.todo_repository_protocol import TodoRepositoryProtocol
 from app.schemas import OutTodo, CreatingTodo, UpdatingTodo
 from app.services.todo_repository import TodoRepository, TodoNotFoundError
 
@@ -10,7 +11,7 @@ todo_router = APIRouter()
 @todo_router.post("/todos", response_model=OutTodo)
 async def create_todo(
         todo: CreatingTodo,
-        todo_repository: TodoRepository = Depends(
+        todo_repository: TodoRepositoryProtocol = Depends(
             get_repository(TodoRepository))
 ):
     return await todo_repository.create(todo)
@@ -18,7 +19,7 @@ async def create_todo(
 
 @todo_router.get("/todos", response_model=list[OutTodo])
 async def get_all_todos(
-        todo_repository: TodoRepository = Depends(
+        todo_repository: TodoRepositoryProtocol = Depends(
             get_repository(TodoRepository))
 ):
     return await todo_repository.get_all()
@@ -27,7 +28,7 @@ async def get_all_todos(
 @todo_router.get("/todos/{todo_id}", response_model=OutTodo)
 async def get_todo_by_id(
         todo_id: int,
-        todo_repository: TodoRepository = Depends(
+        todo_repository: TodoRepositoryProtocol = Depends(
             get_repository(TodoRepository))
 ):
     try:
@@ -40,7 +41,7 @@ async def get_todo_by_id(
 async def update_todo(
         todo_id: int,
         todo: UpdatingTodo,
-        todo_repository: TodoRepository = Depends(
+        todo_repository: TodoRepositoryProtocol = Depends(
             get_repository(TodoRepository))
 ):
     try:
@@ -52,7 +53,7 @@ async def update_todo(
 @todo_router.delete("/todos/{todo_id}", response_model=OutTodo)
 async def delete_todo(
         todo_id: int,
-        todo_repository: TodoRepository = Depends(
+        todo_repository: TodoRepositoryProtocol = Depends(
             get_repository(TodoRepository))
 ):
     try:
