@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
-from app.services.base_repository import BaseRepository
+from app.services.base_repository import AlchemySessionMixin
 
 
 async def _get_alchemy_session(request: Request):
@@ -15,7 +15,7 @@ async def _get_alchemy_session(request: Request):
         await session.close()
 
 
-def get_repository(repository_type: Type[BaseRepository]):
+def get_repository(repository_type: Type[AlchemySessionMixin]):
     def func(alchemy_session: AsyncSession = Depends(_get_alchemy_session)):
         return repository_type(alchemy_session)
 

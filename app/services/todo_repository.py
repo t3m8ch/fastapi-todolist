@@ -3,7 +3,7 @@ from sqlalchemy.exc import NoResultFound
 
 from app.db.models import Todo
 from app.schemas import OutTodo, CreatingTodo, UpdatingTodo
-from app.services.base_repository import BaseRepository
+from app.services.base_repository import AlchemySessionMixin
 
 
 class TodoNotFoundError(Exception):
@@ -11,7 +11,7 @@ class TodoNotFoundError(Exception):
         self.todo_id = todo_id
 
 
-class TodoRepository(BaseRepository):
+class TodoRepository(AlchemySessionMixin):
     async def create(self, todo: CreatingTodo) -> OutTodo:
         todo = (await self._session.execute(
             insert(Todo).values(text=todo.text).
