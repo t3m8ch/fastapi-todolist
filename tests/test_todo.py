@@ -1,40 +1,28 @@
-import asyncio
-
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.__main__ import get_app
-from app.config import AppConfig
-from app.db.init_db import init_db, create_engine
+from app.dependencies import get_todo_repository
+from app.protocols.todo_repository_protocol import TodoRepositoryProtocol
+from tests.mocks.mock_todo_repository import MockTodoRepository
 
 
 @pytest.fixture(scope="module")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+def todo_repository():
+    return MockTodoRepository()
 
 
 @pytest.fixture(scope="module")
-async def engine() -> AsyncEngine:
-    config = AppConfig()
-
-    engine = create_engine(config.test_db_url)
-    yield engine
-    await engine.dispose()
-
-
-@pytest.fixture(scope="module")
-def client(engine: AsyncEngine) -> TestClient:
+def client(todo_repository: TodoRepositoryProtocol) -> TestClient:
     app = get_app()
-    app.state.alchemy_engine = engine
+    app.dependency_overrides[get_todo_repository] = lambda: todo_repository
     return TestClient(app)
 
 
 @pytest.fixture(scope="function", autouse=True)
-async def init_db_fixture(engine: AsyncEngine):
-    await init_db(engine)
+def clear_db_fixture(todo_repository: MockTodoRepository):
+    yield
+    todo_repository.clear()
 
 
 def test_create_todo(client: TestClient):
